@@ -3,7 +3,7 @@ By Mr T Mahomed
 
 **Portfolio project for AI Engineer role - No OpenAI API costs**
 
-Live Demo: Coming in next step
+Live Demo: https://ai-tools-teachers-rag.vercel.app/
 
 Tech Stack:
 - PDF chunked into 62 embeddings
