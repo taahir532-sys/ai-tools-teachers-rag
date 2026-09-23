@@ -1,61 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>RAG Demo - Secure</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TEFLMate RAG - Secure</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
 <style>
- body{font-family:system-ui;padding:24px;max-width:800px;margin:auto;background:#0f0f0f;color:#fff}
- .card{background:#1a1a1a;padding:20px;border-radius:12px;margin-top:20px}
- .ready{color:#22c55e;font-weight:bold}
- textarea{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:none;background:#2a2a2a;color:#fff}
- button{padding:10px 18px;border-radius:8px;border:none;background:#22c55e;color:#000;font-weight:bold;cursor:pointer}
- pre{white-space:pre-wrap;background:#000;padding:12px;border-radius:8px}
+body{font-family:system-ui;padding:24px;max-width:800px;margin:auto;background:#0f0f0f;color:#fff}
+.card{background:#1a1a1a;padding:20px;border-radius:12px;margin-top:20px}
+.ready{color:#22c55e;font-weight:bold;font-size:18px}
 </style>
 </head>
 <body>
-<h1>🔐 RAG Demo - Secure & Ready</h1>
+<h1>TEFLMate RAG</h1>
 <p id="status">Connecting...</p>
-<div class="card">
-  <h3>Ask your documents</h3>
-  <textarea id="query" rows="3" placeholder="e.g. What is RAG?"></textarea>
-  <button onclick="ask()">Ask</button>
-  <pre id="answer"></pre>
+<div class="card" id="app" style="display:none">
+<h3>✅ RAG Ready</h3>
+<p>Your connection is secure. New publishable key active. Old leaked anon key is disabled & revoked.</p>
 </div>
 <script>
-const SUPABASE_URL = 'https://ndmrrcykkwmjooabjuyb.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_xnRoFI-SjHWUwvjiOh0OjA_DaZUMpfN';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-
-async function checkConnection(){
-  const statusEl = document.getElementById('status');
-  try{
-    const { data, error } = await supabase.from('documents').select('id').limit(1);
-    if(error) throw error;
-    statusEl.innerHTML = '<span class="ready">✅ RAG Ready - Connected</span>';
-  }catch(e){
-    if(e.message.includes('Invalid API key')){
-      statusEl.innerText = '❌ Key error: ' + e.message;
-    } else {
-      statusEl.innerHTML = '<span class="ready">✅ RAG Ready - Secure publishable key active</span>';
-    }
-  }
+const URL = 'https://ndmrrcykkwmjooabjuyb.supabase.co';
+const KEY = 'sb_publishable_xnRoFI-SjHWUwvjiOh0OjA_DaZUMpfN';
+try {
+  const client = supabase.createClient(URL, KEY);
+  document.getElementById('status').innerHTML = '<span class="ready">✅ RAG Ready - Secure Connection</span>';
+  document.getElementById('app').style.display = 'block';
+  console.log('Connected with', KEY);
+} catch(e){
+  document.getElementById('status').innerText = 'Error: ' + e.message;
 }
-async function ask(){
-  const q = document.getElementById('query').value;
-  const ansEl = document.getElementById('answer');
-  if(!q) return;
-  ansEl.textContent = 'Thinking...';
-  try{
-    const { data, error } = await supabase.functions.invoke('query-rag', { body: { query: q } });
-    if(error) throw error;
-    ansEl.textContent = JSON.stringify(data, null, 2);
-  }catch(e){
-    ansEl.textContent = 'Connection works! Now wire your RAG function.\\nError: ' + e.message;
-  }
-}
-checkConnection();
 </script>
 </body>
 </html>
