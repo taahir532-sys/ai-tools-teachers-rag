@@ -9,39 +9,40 @@
 body{font-family:system-ui;padding:24px;max-width:800px;margin:auto;background:#0f0f12;color:#fff}
 .card{background:#1c1c21;padding:20px;border-radius:12px;margin-top:20px;border:1px solid #333}
 .ready{color:#22c55e;font-weight:bold}
-input,textarea{width:100%;padding:12px;margin:10px 0;border-radius:8px;border:none;background:#2a2a32;color:#fff;font-size:15px}
+textarea{width:100%;padding:12px;margin:10px 0;border-radius:8px;border:none;background:#2a2a32;color:#fff;font-size:15px}
 button{padding:12px 20px;border-radius:8px;border:none;background:#22c55e;color:#000;font-weight:bold;cursor:pointer;width:100%;font-size:16px}
-button:hover{background:#16a34a}
-pre{white-space:pre-wrap;background:#000;padding:15px;border-radius:8px;margin-top:15px;min-height:50px}
+pre{white-space:pre-wrap;background:#000;padding:15px;border-radius:8px;margin-top:15px;min-height:80px;line-height:1.6}
 </style>
 </head>
 <body>
 <h1>AI Tools for Teachers</h1>
-<p id="status" class="ready">✅ Ready</p>
-
+<p class="ready">✅ Ready</p>
 <div class="card">
   <h3>🤖 Ask Your Teaching Resources</h3>
   <textarea id="query" rows="3" placeholder="e.g. What AI tools help with lesson planning?"></textarea>
   <button onclick="ask()">Ask AI</button>
   <pre id="answer">Your answer will appear here...</pre>
 </div>
-
 <script>
 const SUPABASE_URL = 'https://ndmrrcykkwmjooabjuyb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_xnRoFI-SjHWUwvjiOh0OjA_DaZUMpfN';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function ask(){
-  const q = document.getElementById('query').value;
+  const input = document.getElementById('query').value.trim();
+  const q = input.toLowerCase();
   const ansEl = document.getElementById('answer');
   if(!q){ ansEl.textContent = 'Please type a question first.'; return; }
-  ansEl.textContent = 'Thinking...';
+  ansEl.textContent = 'Searching resources...';
   try{
-    const { data, error } = await supabaseClient.functions.invoke('query-rag', {
-      body: { query: q }
-    });
+    const keyword = q.split(' ').filter(w=>w.length>3)[0] || q;
+    const { data, error } = await supabaseClient.from('documents').select('content').ilike('content', `%${keyword}%`).limit(5);
     if(error) throw error;
-    ansEl.textContent = data.answer || data.response || JSON.stringify(data, null, 2);
+    if(!data || data.length===0){
+      ansEl.textContent = 'No match for "'+input+'". Try a keyword like: lesson, AI, planning, assessment.';
+    } else {
+      ansEl.textContent = data.map((d,i)=>`${d.content}`).join('\n\n---\n\n');
+    }
   }catch(e){
     ansEl.textContent = 'Error: ' + e.message;
   }
