@@ -6,28 +6,31 @@
 <div class="card">
 <h2>AI Tools for Teachers - RAG System</h2>
 <p style="color:#666">By Mr T Mahomed | Zero-cost RAG Demo for AI Engineer Portfolio<br>62 chunks | all-MiniLM-L6-v2 384d | Supabase pgvector | Client-side inference</p>
-<input id="url" placeholder="Supabase URL" style="width:100%;padding:10px;margin:4px 0">
-<input id="key" placeholder="Supabase Anon Key" style="width:100%;padding:10px;margin:4px 0">
-<button id="btn" onclick="init()" style="width:100%;padding:12px;background:black;color:white;border-radius:8px">Connect RAG System</button>
-<div id="log" style="font-size:12px;color:#666;margin:8px 0">Status: Not connected</div>
+<div id="log" style="font-size:12px;color:#666;margin:8px 0">Status: Loading RAG model (first load 30-40 sec)...</div>
 <div id="chat"></div>
 <div style="display:flex;gap:8px"><input id="q" placeholder="Ask: What tools for lesson planning?" style="flex:1;padding:12px;border-radius:8px;border:1px solid #ddd"><button onclick="ask()" style="padding:12px 20px;background:black;color:white;border-radius:8px">Ask</button></div>
 </div>
 <script type="module">import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/+esm'; window.makeEmbedder = () => pipeline('feature-extraction','Xenova/all-MiniLM-L6-v2');</script>
 <script>
+// HARDCODED - Auto-connect
+const SUPABASE_URL = "https://ndmrrcykkwmjooabjuyb.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kbXJyY3lra3dtam9vYWJqdXliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyOTQwODUsImV4cCI6MjEwNDg3MDA4NX0.zIion_5JTBHkLjeWdg7HCjA4FQ7QRbI5JIj3YmzlGSg";
+
 let client, embedder;
 function log(m){document.getElementById('log').innerText="Status: "+m}
 function add(t,c){let d=document.createElement('div');d.className=c;d.innerHTML=t;document.getElementById('chat').appendChild(d);document.getElementById('chat').scrollTop=9999}
 async function init(){
  log("Loading local embedding model (30-40 sec first time)..."); embedder=await window.makeEmbedder();
- client=window.supabase.createClient(document.getElementById('url').value.trim(),document.getElementById('key').value.trim());
+ client=window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
  log("RAG Ready - Ask a question about the PDF"); add("System: RAG connected. 62 chunks searchable. Zero API cost.","a");
 }
 async function ask(){
  let question=document.getElementById('q').value; if(!question) return; add("<b>You:</b> "+question,""); document.getElementById('q').value="";
+ if(!client || !embedder){ add("System: Still loading model, please wait...","a"); return; }
  log("Searching PDF..."); let out=await embedder(question,{pooling:'mean',normalize:true}); let emb=Array.from(out.data);
  let {data,error}=await client.rpc('match_ai_tools',{query_embedding:emb,match_count:3});
- if(error){add("Error: "+error.message,"a"); return}
+ if(error){add("Error: "+error.message,"a"); log("Error: "+error.message); return}
  log("Found "+data.length+" relevant sections"); data.forEach(r=>add("<b>From PDF:</b> "+r.content,"a"));
 }
+window.addEventListener('load', init);
 </script></body></html>
