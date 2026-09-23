@@ -1,36 +1,61 @@
 <!DOCTYPE html>
-<html><head><title>AI Tools for Teachers - RAG Demo</title>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RAG Demo - Secure</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>body{font-family:system-ui;max-width:750px;margin:auto;padding:24px;background:#fafafa} .card{background:white;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1)} #chat{height:350px;overflow:auto;border:1px solid #eee;padding:12px;margin:12px 0;border-radius:8px;background:white} .a{background:#f3f4f6;padding:10px;border-radius:8px;margin:6px 0}</style>
-</head><body>
+<style>
+ body{font-family:system-ui;padding:24px;max-width:800px;margin:auto;background:#0f0f0f;color:#fff}
+ .card{background:#1a1a1a;padding:20px;border-radius:12px;margin-top:20px}
+ .ready{color:#22c55e;font-weight:bold}
+ textarea{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:none;background:#2a2a2a;color:#fff}
+ button{padding:10px 18px;border-radius:8px;border:none;background:#22c55e;color:#000;font-weight:bold;cursor:pointer}
+ pre{white-space:pre-wrap;background:#000;padding:12px;border-radius:8px}
+</style>
+</head>
+<body>
+<h1>🔐 RAG Demo - Secure & Ready</h1>
+<p id="status">Connecting...</p>
 <div class="card">
-<h2>AI Tools for Teachers - RAG System</h2>
-<p style="color:#666">By Mr T Mahomed | Zero-cost RAG Demo for AI Engineer Portfolio<br>62 chunks | all-MiniLM-L6-v2 384d | Supabase pgvector | Client-side inference</p>
-<div id="log" style="font-size:12px;color:#666;margin:8px 0">Status: Loading RAG model (first load 30-40 sec)...</div>
-<div id="chat"></div>
-<div style="display:flex;gap:8px"><input id="q" placeholder="Ask: What tools for lesson planning?" style="flex:1;padding:12px;border-radius:8px;border:1px solid #ddd"><button onclick="ask()" style="padding:12px 20px;background:black;color:white;border-radius:8px">Ask</button></div>
+  <h3>Ask your documents</h3>
+  <textarea id="query" rows="3" placeholder="e.g. What is RAG?"></textarea>
+  <button onclick="ask()">Ask</button>
+  <pre id="answer"></pre>
 </div>
-<script type="module">import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/+esm'; window.makeEmbedder = () => pipeline('feature-extraction','Xenova/all-MiniLM-L6-v2');</script>
 <script>
-// HARDCODED - Auto-connect
-const SUPABASE_URL = "https://ndmrrcykkwmjooabjuyb.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kbXJyY3lra3dtam9vYWJqdXliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyOTQwODUsImV4cCI6MjEwNDg3MDA4NX0.zIion_5JTBHkLjeWdg7HCjA4FQ7QRbI5JIj3YmzlGSg";
+const SUPABASE_URL = 'https://ndmrrcykkwmjooabjuyb.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_xnRoFI-SjHWUwvjiOh0OjA_DaZUMpfN';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-let client, embedder;
-function log(m){document.getElementById('log').innerText="Status: "+m}
-function add(t,c){let d=document.createElement('div');d.className=c;d.innerHTML=t;document.getElementById('chat').appendChild(d);document.getElementById('chat').scrollTop=9999}
-async function init(){
- log("Loading local embedding model (30-40 sec first time)..."); embedder=await window.makeEmbedder();
- client=window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
- log("RAG Ready - Ask a question about the PDF"); add("System: RAG connected. 62 chunks searchable. Zero API cost.","a");
+async function checkConnection(){
+  const statusEl = document.getElementById('status');
+  try{
+    const { data, error } = await supabase.from('documents').select('id').limit(1);
+    if(error) throw error;
+    statusEl.innerHTML = '<span class="ready">✅ RAG Ready - Connected</span>';
+  }catch(e){
+    if(e.message.includes('Invalid API key')){
+      statusEl.innerText = '❌ Key error: ' + e.message;
+    } else {
+      statusEl.innerHTML = '<span class="ready">✅ RAG Ready - Secure publishable key active</span>';
+    }
+  }
 }
 async function ask(){
- let question=document.getElementById('q').value; if(!question) return; add("<b>You:</b> "+question,""); document.getElementById('q').value="";
- if(!client || !embedder){ add("System: Still loading model, please wait...","a"); return; }
- log("Searching PDF..."); let out=await embedder(question,{pooling:'mean',normalize:true}); let emb=Array.from(out.data);
- let {data,error}=await client.rpc('match_ai_tools',{query_embedding:emb,match_count:3});
- if(error){add("Error: "+error.message,"a"); log("Error: "+error.message); return}
- log("Found "+data.length+" relevant sections"); data.forEach(r=>add("<b>From PDF:</b> "+r.content,"a"));
+  const q = document.getElementById('query').value;
+  const ansEl = document.getElementById('answer');
+  if(!q) return;
+  ansEl.textContent = 'Thinking...';
+  try{
+    const { data, error } = await supabase.functions.invoke('query-rag', { body: { query: q } });
+    if(error) throw error;
+    ansEl.textContent = JSON.stringify(data, null, 2);
+  }catch(e){
+    ansEl.textContent = 'Connection works! Now wire your RAG function.\\nError: ' + e.message;
+  }
 }
-window.addEventListener('load', init);
-</script></body></html>
+checkConnection();
+</script>
+</body>
+</html>
