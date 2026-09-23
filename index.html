@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Tools for Teachers - RAG</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js?v=2"></script>
 <style>
 body{font-family:system-ui;padding:24px;max-width:800px;margin:auto;background:#0f0f12;color:#fff}
 .card{background:#1c1c21;padding:20px;border-radius:12px;margin-top:20px;border:1px solid #333}
@@ -12,39 +12,41 @@ body{font-family:system-ui;padding:24px;max-width:800px;margin:auto;background:#
 textarea{width:100%;padding:12px;margin:10px 0;border-radius:8px;border:none;background:#2a2a32;color:#fff;font-size:15px}
 button{padding:12px 20px;border-radius:8px;border:none;background:#22c55e;color:#000;font-weight:bold;cursor:pointer;width:100%;font-size:16px}
 pre{white-space:pre-wrap;background:#000;padding:15px;border-radius:8px;margin-top:15px;min-height:80px;line-height:1.6}
+.ver{color:#666;font-size:11px;margin-top:10px}
 </style>
 </head>
 <body>
+<!-- VERSION 2.1 - OPTION1 - NO EDGE FUNCTION - BUILD 2025 -->
 <h1>AI Tools for Teachers</h1>
-<p class="ready">✅ Ready</p>
+<p class="ready">✅ Ready - v2.1</p>
 <div class="card">
   <h3>🤖 Ask Your Teaching Resources</h3>
   <textarea id="query" rows="3" placeholder="e.g. What AI tools help with lesson planning?"></textarea>
-  <button onclick="ask()">Ask AI</button>
-  <pre id="answer">Your answer will appear here...</pre>
+  <button onclick="doSearch()">Ask AI</button>
+  <pre id="answer">Your answer will appear here... (v2.1)</pre>
+  <div class="ver">Build v2.1 - No Edge Function</div>
 </div>
 <script>
 const SUPABASE_URL = 'https://ndmrrcykkwmjooabjuyb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_xnRoFI-SjHWUwvjiOh0OjA_DaZUMpfN';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-async function ask(){
+async function doSearch(){
   const input = document.getElementById('query').value.trim();
-  const q = input.toLowerCase();
   const ansEl = document.getElementById('answer');
-  if(!q){ ansEl.textContent = 'Please type a question first.'; return; }
-  ansEl.textContent = 'Searching resources...';
+  if(!input){ ansEl.textContent = 'Please type a question first.'; return; }
+  ansEl.textContent = 'Searching resources for: ' + input + '...';
   try{
-    const keyword = q.split(' ').filter(w=>w.length>3)[0] || q;
+    const keyword = input.split(' ').filter(w=>w.length>3)[0] || input;
     const { data, error } = await supabaseClient.from('documents').select('content').ilike('content', `%${keyword}%`).limit(5);
     if(error) throw error;
     if(!data || data.length===0){
-      ansEl.textContent = 'No match for "'+input+'". Try a keyword like: lesson, AI, planning, assessment.';
+      ansEl.textContent = 'No match found for "'+input+'". Try: lesson, AI, planning';
     } else {
-      ansEl.textContent = data.map((d,i)=>`${d.content}`).join('\n\n---\n\n');
+      ansEl.textContent = data.map(d=>d.content).join('\n\n---\n\n');
     }
   }catch(e){
-    ansEl.textContent = 'Error: ' + e.message;
+    ansEl.textContent = 'DB Error: ' + e.message + '\n\nIf table name is not "documents", tell me the name.';
   }
 }
 </script>
