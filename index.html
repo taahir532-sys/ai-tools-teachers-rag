@@ -3,31 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TEFLMate RAG - Secure</title>
+<title>AI Tools for Teachers - RAG</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
 <style>
-body{font-family:system-ui;padding:24px;max-width:800px;margin:auto;background:#0f0f0f;color:#fff}
-.card{background:#1a1a1a;padding:20px;border-radius:12px;margin-top:20px}
+body{font-family:system-ui;padding:24px;max-width:800px;margin:auto;background:#0f0f12;color:#fff}
+.card{background:#1c1c21;padding:20px;border-radius:12px;margin-top:20px;border:1px solid #333}
 .ready{color:#22c55e;font-weight:bold;font-size:18px}
 </style>
 </head>
 <body>
-<h1>TEFLMate RAG</h1>
+<h1>AI Tools for Teachers</h1>
 <p id="status">Connecting...</p>
 <div class="card" id="app" style="display:none">
-<h3>✅ RAG Ready</h3>
-<p>Your connection is secure. New publishable key active. Old leaked anon key is disabled & revoked.</p>
+<h3>✅ RAG Ready - Secure</h3>
+<p>Connected with new publishable key. Old leaked anon key is disabled & revoked.</p>
 </div>
 <script>
-const URL = 'https://ndmrrcykkwmjooabjuyb.supabase.co';
-const KEY = 'sb_publishable_xnRoFI-SjHWUwvjiOh0OjA_DaZUMpfN';
+const SUPABASE_URL = 'https://ndmrrcykkwmjooabjuyb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_xnRoFI-SjHWUwvjiOh0OjA_DaZUMpfN';
 try {
-  const client = supabase.createClient(URL, KEY);
-  document.getElementById('status').innerHTML = '<span class="ready">✅ RAG Ready - Secure Connection</span>';
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  document.getElementById('status').innerHTML = '<span class="ready">✅ RAG Ready - Secure Connection Active</span>';
   document.getElementById('app').style.display = 'block';
-  console.log('Connected with', KEY);
 } catch(e){
   document.getElementById('status').innerText = 'Error: ' + e.message;
+  console.error(e);
 }
 </script>
 </body>
